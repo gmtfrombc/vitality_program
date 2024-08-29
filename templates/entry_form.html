@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Data Entry</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+    <h1>Patient Data Entry Form</h1>
+    <form action="{{ url_for('entry') }}" method="post">
+        <!-- Patient Name -->
+        <label for="name">Patient Name:</label>
+        <input type="text" id="name" name="name" required><br>
+
+        <!-- Surveys -->
+        <h2>Surveys</h2>
+        <h3>Priorities Survey</h3>
+        <label for="date_completed_priorities">Date Completed:</label>
+        <input type="date" id="date_completed_priorities" name="date_completed_priorities" required><br>
+        <label for="nutrition_priority">Nutrition Priority:</label>
+        <input type="number" id="nutrition_priority" name="nutrition_priority" min="1" max="5" required><br>
+        <label for="exercise_priority">Exercise Priority:</label>
+        <input type="number" id="exercise_priority" name="exercise_priority" min="1" max="5" required><br>
+        <label for="sleep_priority">Sleep Priority:</label>
+        <input type="number" id="sleep_priority" name="sleep_priority" min="1" max="5" required><br>
+        <label for="stress_priority">Stress Priority:</label>
+        <input type="number" id="stress_priority" name="stress_priority" min="1" max="5" required><br>
+        <label for="relationships_priority">Relationships Priority:</label>
+        <input type="number" id="relationships_priority" name="relationships_priority" min="1" max="5" required><br>
+
+        <h3>Readiness Survey</h3>
+        <label for="date_completed_readiness">Date Completed:</label>
+        <input type="date" id="date_completed_readiness" name="date_completed_readiness" required><br>
+        <label for="importance_readiness">Importance of Health Change:</label>
+        <input type="number" id="importance_readiness" name="importance_readiness" min="1" max="5" required><br>
+        <label for="confidence_readiness">Confidence in Making Change:</label>
+        <input type="number" id="confidence_readiness" name="confidence_readiness" min="1" max="5" required><br>
+
+        <h3>Mental Health Survey</h3>
+        <label for="date_completed_mental_health">Date Completed:</label>
+        <input type="date" id="date_completed_mental_health" name="date_completed_mental_health" required><br>
+        <label for="phq9_score">PHQ-9 Score:</label>
+        <input type="number" id="phq9_score" name="phq9_score" min="0" max="27" required><br>
+        <label for="gad7_score">GAD-7 Score:</label>
+        <input type="number" id="gad7_score" name="gad7_score" min="0" max="21" required><br>
+
+        <!-- Biometric Data -->
+        <h2>Biometric Data</h2>
+        <label for="date_completed_biometrics">Date Completed:</label>
+        <input type="date" id="date_completed_biometrics" name="date_completed_biometrics" required><br>
+        <label for="fasting_glucose">Fasting Glucose:</label>
+        <input type="number" id="fasting_glucose" name="fasting_glucose" required><br>
+        <label for="total_cholesterol">Total Cholesterol:</label>
+        <input type="number" id="total_cholesterol" name="total_cholesterol" required><br>
+        <label for="triglycerides">Triglycerides:</label>
+        <input type="number" id="triglycerides" name="triglycerides" required><br>
+        <label for="hdl_cholesterol">HDL Cholesterol:</label>
+        <input type="number" id="hdl_cholesterol" name="hdl_cholesterol" required><br>
+        <label for="apolipoprotein_b">Apolipoprotein B:</label>
+        <input type="number" id="apolipoprotein_b" name="apolipoprotein_b" required><br>
+        <label for="hba1c">Hemoglobin A1C:</label>
+        <input type="number" id="hba1c" name="hba1c" step="0.1" required><br>
+        <label for="alt">Liver Enzyme ALT:</label>
+        <input type="number" id="alt" name="alt" required><br>
+
+        <!-- Vital Signs -->
+        <h2>Vital Signs</h2>
+        <label for="date_completed_vitals">Date Completed:</label>
+        <input type="date" id="date_completed_vitals" name="date_completed_vitals" required><br>
+        <label for="blood_pressure">Blood Pressure (systolic/diastolic):</label>
+        <input type="text" id="blood_pressure" name="blood_pressure" required><br>
+        <label for="weight">Weight (lbs):</label>
+        <input type="number" id="weight" name="weight" required><br>
+        <label for="bmi">BMI:</label>
+        <input type="number" id="bmi" name="bmi" required><br>
+        <label for="vitality_score">Vitality Score:</label>
+        <input type="number" id="vitality_score" name="vitality_score" required><br>
+
+        <!-- Encounters -->
+        <h2>Encounters</h2>
+        <div id="encounter_entries">
+            <div>
+                <label for="date_completed_encounter[]">Date Completed:</label>
+                <input type="date" id="date_completed_encounter[]" name="date_completed_encounter[]"><br>
+
+                <label for="encounter_type[]">Encounter Type:</label>
+                <input type="text" id="encounter_type[]" name="encounter_type[]"><br>
+
+                <label for="encounter_document[]">Encounter Document:</label>
+                <textarea id="encounter_document[]" name="encounter_document[]"></textarea><br>
+            </div>
+        </div>
+        <button type="button" onclick="addEncounter()">Add Another Encounter</button>
+
+        <!-- SMS Messages -->
+        <h2>SMS Messages</h2>
+        <div id="sms_entries">
+            <div>
+                <label for="date_completed_sms[]">Date Completed:</label>
+                <input type="date" id="date_completed_sms[]" name="date_completed_sms[]"><br>
+
+                <label for="sms_content[]">SMS Content:</label>
+                <textarea id="sms_content[]" name="sms_content[]"></textarea><br>
+            </div>
+        </div>
+        <button type="button" onclick="addSMS()">Add Another SMS</button>
+
+        <!-- Appointments -->
+        <h2>Appointments</h2>
+        <label for="provider_scheduled">Provider Appointments Scheduled:</label>
+        <input type="number" id="provider_scheduled" name="provider_scheduled" required><br>
+        <label for="provider_completed">Provider Appointments Completed:</label>
+        <input type="number" id="provider_completed" name="provider_completed" required><br>
+        <label for="provider_missed">Provider Appointments Missed:</label>
+        <input type="number" id="provider_missed" name="provider_missed" required><br>
+
+        <label for="coach_scheduled">Coach Appointments Scheduled:</label>
+        <input type="number" id="coach_scheduled" name="coach_scheduled" required><br>
+        <label for="coach_completed">Coach Appointments Completed:</label>
+        <input type="number" id="coach_completed" name="coach_completed" required><br>
+        <label for="coach_missed">Coach Appointments Missed:</label>
+        <input type="number" id="coach_missed" name="coach_missed" required><br>
+
+        <!-- Goals and Progress -->
+        <h2>Goals and Progress</h2>
+        <label for="date_completed_goals">Date Completed:</label>
+        <input type="date" id="date_completed_goals" name="date_completed_goals" required><br>
+        <label for="weight_loss_goal">Weight Loss Goal:</label>
+        <input type="number" id="weight_loss_goal" name="weight_loss_goal" required><br>
+        <label for="vitality_score_goal">Vitality Score Goal:</label>
+        <input type="number" id="vitality_score_goal" name="vitality_score_goal" required><br>
+
+        <br>
+        <input type="submit" value="Submit">
+    </form>
+
+    <!-- JavaScript for dynamically adding encounters and SMS entries -->
+    <script>
+        function addEncounter() {
+            var container = document.getElementById('encounter_entries');
+            var newEncounter = document.createElement('div');
+            newEncounter.innerHTML = `
+                <label for="date_completed_encounter[]">Date Completed:</label>
+                <input type="date" id="date_completed_encounter[]" name="date_completed_encounter[]"><br>
+
+                <label for="encounter_type[]">Encounter Type:</label>
+                <input type="text" id="encounter_type[]" name="encounter_type[]"><br>
+
+                <label for="encounter_document[]">Encounter Document:</label>
+                <textarea id="encounter_document[]" name="encounter_document[]"></textarea><br>
+            `;
+            container.appendChild(newEncounter);
+        }
+
+        function addSMS() {
+            var container = document.getElementById('sms_entries');
+            var newSMS = document.createElement('div');
+            newSMS.innerHTML = `
+                <label for="date_completed_sms[]">Date Completed:</label>
+                <input type="date" id="date_completed_sms[]" name="date_completed_sms[]"><br>
+
+                <label for="sms_content[]">SMS Content:</label>
+                <textarea id="sms_content[]" name="sms_content[]"></textarea><br>
+            `;
+            container.appendChild(newSMS);
+        }
+    </script>
+</body>
+
+</html>
