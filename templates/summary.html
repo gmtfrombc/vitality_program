@@ -4,13 +4,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vitality Program - Summary</title>
+    <title>Vitality Program - Patient Summary</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 
 <body>
-    <h1>Provider Summary</h1>
-    <pre>{{ prompt_text }}</pre>
+    <h1>Review Patient Summary Prompt</h1>
+    <p><strong>MRN:</strong> {{ patient_data['mrn'] }}</p>
+
+    <h2>Generated Prompt</h2>
+    <textarea id="promptText" name="promptText" rows="20" cols="100">{{ prompt_text }}</textarea>
+
+    <h3>Actions</h3>
+    <!-- The following button will be used to send the prompt to the AI agent -->
+    <button onclick="sendPrompt()">Send to AI Agent</button>
+
+    <!-- Simulated Success Message -->
+    <div id="successMessage" style="display:none; color: green;">
+        The prompt has been successfully sent to the AI agent!
+    </div>
+
+    <!-- Back to Home Button -->
+    <div style="margin-top: 20px;">
+        <a href="{{ url_for('index') }}" class="button">Back to Home</a>
+    </div>
+
+    <script>
+        function sendPrompt() {
+            // This is where the API call would be made in the future
+            alert("Prompt sent to AI Agent!");
+
+            // For now, simulate a success message
+            document.getElementById('successMessage').style.display = 'block';
+        }
+    </script>
 </body>
 
 </html>

@@ -2,27 +2,30 @@ import sqlite3
 
 
 def init_db():
-    conn = sqlite3.connect('vitality_program.db')
+    conn = sqlite3.connect('vp.db')
     cursor = conn.cursor()
 
-    # Create the Patients table
+    # Create the Patients table with MRN
     cursor.execute('''CREATE TABLE IF NOT EXISTS patients (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT
+        name TEXT NOT NULL,
+        mrn INTEGER UNIQUE NOT NULL
     )''')
 
     # Create the Surveys table
     cursor.execute('''CREATE TABLE IF NOT EXISTS surveys (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         patient_id INTEGER,
-        date_completed DATE,
+        date_completed_priorities DATE,
         nutrition_priority INTEGER,
         exercise_priority INTEGER,
         sleep_priority INTEGER,
         stress_priority INTEGER,
         relationships_priority INTEGER,
+        date_completed_readiness DATE,
         importance_readiness INTEGER,
         confidence_readiness INTEGER,
+        date_completed_mental_health DATE,
         phq9_score INTEGER,
         gad7_score INTEGER,
         FOREIGN KEY (patient_id) REFERENCES patients(id)
@@ -99,143 +102,200 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Method to add patient data to the respective tables
-
 
 def add_patient_data(patient_data):
-    conn = sqlite3.connect('vitality_program.db')
+    conn = sqlite3.connect('vp.db')
     cursor = conn.cursor()
 
-    # Insert patient record
-    cursor.execute('''INSERT INTO patients (name) VALUES (?)''',
-                   (patient_data['name'],))
-    patient_id = cursor.lastrowid
+    # Insert patient record if it doesn't already exist
+    cursor.execute('''INSERT OR IGNORE INTO patients (mrn, name) VALUES (?, ?)''',
+                   (patient_data['mrn'], patient_data['name']))
 
-    # Insert surveys data
-    cursor.execute('''INSERT INTO surveys (
-        patient_id, date_completed, nutrition_priority, exercise_priority, sleep_priority, 
-        stress_priority, relationships_priority, importance_readiness, confidence_readiness, 
-        phq9_score, gad7_score) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', (
-        patient_id, patient_data['date_completed_survey'], patient_data['nutrition_priority'],
-        patient_data['exercise_priority'], patient_data['sleep_priority'], patient_data['stress_priority'],
-        patient_data['relationships_priority'], patient_data['importance_readiness'],
-        patient_data['confidence_readiness'], patient_data['phq9_score'], patient_data['gad7_score']
-    ))
+    # Get the patient ID based on the MRN
+    cursor.execute("SELECT id FROM patients WHERE mrn = ?",
+                   (patient_data['mrn'],))
+    patient_id = cursor.fetchone()[0]
 
-    # Insert biometric data
-    cursor.execute('''INSERT INTO biometric_data (
-        patient_id, date_completed, fasting_glucose, total_cholesterol, triglycerides, 
-        hdl_cholesterol, apolipoprotein_b, hba1c, alt) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''', (
-        patient_id, patient_data['date_completed_biometrics'], patient_data['fasting_glucose'],
-        patient_data['total_cholesterol'], patient_data['triglycerides'], patient_data['hdl_cholesterol'],
-        patient_data['apolipoprotein_b'], patient_data['hba1c'], patient_data['alt']
-    ))
+    # Insert surveys data if any field is filled
+    if any([patient_data.get('date_completed_priorities'), patient_data.get('nutrition_priority'),
+            patient_data.get('exercise_priority'), patient_data.get(
+                'sleep_priority'),
+            patient_data.get('stress_priority'), patient_data.get(
+                'relationships_priority'),
+            patient_data.get('date_completed_readiness'), patient_data.get(
+                'importance_readiness'),
+            patient_data.get('confidence_readiness'), patient_data.get(
+                'date_completed_mental_health'),
+            patient_data.get('phq9_score'), patient_data.get('gad7_score')]):
+        cursor.execute('''INSERT INTO surveys (
+            patient_id, date_completed_priorities, nutrition_priority, exercise_priority, 
+            sleep_priority, stress_priority, relationships_priority, date_completed_readiness, 
+            importance_readiness, confidence_readiness, date_completed_mental_health, phq9_score, gad7_score) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', (
+            patient_id, patient_data.get('date_completed_priorities'),
+            patient_data.get('nutrition_priority'), patient_data.get(
+                'exercise_priority'),
+            patient_data.get('sleep_priority'), patient_data.get(
+                'stress_priority'),
+            patient_data.get('relationships_priority'), patient_data.get(
+                'date_completed_readiness'),
+            patient_data.get('importance_readiness'), patient_data.get(
+                'confidence_readiness'),
+            patient_data.get('date_completed_mental_health'), patient_data.get(
+                'phq9_score'),
+            patient_data.get('gad7_score')
+        ))
 
-    # Insert vital signs data
-    cursor.execute('''INSERT INTO vital_signs (
-        patient_id, date_completed, blood_pressure, weight, bmi, vitality_score) 
-        VALUES (?, ?, ?, ?, ?, ?)''', (
-        patient_id, patient_data['date_completed_vitals'], patient_data['blood_pressure'],
-        patient_data['weight'], patient_data['bmi'], patient_data['vitality_score']
-    ))
+     # Insert biometric data only if all relevant fields have been provided
+    if patient_data.get('date_completed_biometrics') and any([
+        patient_data.get('fasting_glucose'),
+        patient_data.get('total_cholesterol'),
+        patient_data.get('triglycerides'),
+        patient_data.get('hdl_cholesterol'),
+        patient_data.get('apolipoprotein_b'),
+        patient_data.get('hba1c'),
+        patient_data.get('alt')
+    ]):
+        cursor.execute('''INSERT INTO biometric_data (
+            patient_id, date_completed, fasting_glucose, total_cholesterol, triglycerides, 
+            hdl_cholesterol, apolipoprotein_b, hba1c, alt) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''', (
+            patient_id, patient_data.get('date_completed_biometrics'),
+            patient_data.get('fasting_glucose'), patient_data.get(
+                'total_cholesterol'),
+            patient_data.get('triglycerides'), patient_data.get(
+                'hdl_cholesterol'),
+            patient_data.get('apolipoprotein_b'), patient_data.get('hba1c'),
+            patient_data.get('alt')
+        ))
 
-    # Insert encounters data
-    for i in range(len(patient_data['encounter_dates'])):
-        cursor.execute('''INSERT INTO encounters (
-            patient_id, date_completed, encounter_type, encounter_document) 
+    # Insert vital signs data if any field is filled
+    if any([patient_data.get('blood_pressure'), patient_data.get('weight'),
+            patient_data.get('bmi'), patient_data.get('vitality_score')]):
+        cursor.execute('''INSERT INTO vital_signs (
+            patient_id, date_completed, blood_pressure, weight, bmi, vitality_score) 
+            VALUES (?, ?, ?, ?, ?, ?)''', (
+            patient_id, patient_data.get('date_completed_vitals'),
+            patient_data.get('blood_pressure'), patient_data.get('weight'),
+            patient_data.get('bmi'), patient_data.get('vitality_score')
+        ))
+
+    # Insert encounters data if all fields for at least one encounter are filled
+    if 'encounter_dates' in patient_data and 'encounter_types' in patient_data and 'encounter_documents' in patient_data:
+        for date, type_, document in zip(patient_data['encounter_dates'], patient_data['encounter_types'], patient_data['encounter_documents']):
+            if date and type_ and document:  # Ensure all fields are non-empty
+                cursor.execute('''INSERT INTO encounters (
+                    patient_id, date_completed, encounter_type, encounter_document) 
+                    VALUES (?, ?, ?, ?)''', (
+                    patient_id, date, type_, document
+                ))
+
+    # Insert SMS messages data if both date and content are filled
+    if 'sms_dates' in patient_data and 'sms_contents' in patient_data:
+        for date, content in zip(patient_data['sms_dates'], patient_data['sms_contents']):
+            if date and content:  # Ensure fields are non-empty
+                cursor.execute('''INSERT INTO sms_messages (
+                    patient_id, date_completed, sms_content) 
+                    VALUES (?, ?, ?)''', (
+                    patient_id, date, content
+                ))
+
+    # Insert goals and progress data if any field is filled
+    if any([patient_data.get('weight_loss_goal'), patient_data.get('vitality_score_goal')]):
+        cursor.execute('''INSERT INTO goals (
+            patient_id, date_completed, weight_loss_goal, vitality_score_goal) 
             VALUES (?, ?, ?, ?)''', (
-            patient_id, patient_data['encounter_dates'][i], patient_data['encounter_types'][i],
-            patient_data['encounter_documents'][i]
+            patient_id, patient_data.get('date_completed_goals'),
+            patient_data.get('weight_loss_goal'),
+            patient_data.get('vitality_score_goal')
         ))
-
-    # Insert SMS messages data
-    for i in range(len(patient_data['sms_dates'])):
-        cursor.execute('''INSERT INTO sms_messages (
-            patient_id, date_completed, sms_content) 
-            VALUES (?, ?, ?)''', (
-            patient_id, patient_data['sms_dates'][i], patient_data['sms_contents'][i]
-        ))
-
-    # Insert appointments data (Provider)
-    cursor.execute('''INSERT INTO appointments (
-        patient_id, date_completed, appointment_type, scheduled, completed, missed) 
-        VALUES (?, ?, ?, ?, ?, ?)''', (
-        patient_id, patient_data['date_completed_appointment'], 'Provider',
-        patient_data['provider_scheduled'], patient_data['provider_completed'],
-        patient_data['provider_missed']
-    ))
-
-    # Insert appointments data (Health Coach)
-    cursor.execute('''INSERT INTO appointments (
-        patient_id, date_completed, appointment_type, scheduled, completed, missed) 
-        VALUES (?, ?, ?, ?, ?, ?)''', (
-        patient_id, patient_data['date_completed_appointment'], 'Health Coach',
-        patient_data['coach_scheduled'], patient_data['coach_completed'],
-        patient_data['coach_missed']
-    ))
-
-    # Insert goals and progress data
-    cursor.execute('''INSERT INTO goals (
-        patient_id, date_completed, weight_loss_goal, vitality_score_goal) 
-        VALUES (?, ?, ?, ?)''', (
-        patient_id, patient_data['date_completed_goals'], patient_data['weight_loss_goal'],
-        patient_data['vitality_score_goal']
-    ))
 
     conn.commit()
     conn.close()
 
-# Method to retrieve patient data
 
-
-def get_patient_data(patient_id):
-    conn = sqlite3.connect('vitality_program.db')
+def get_patient_data_by_mrn(mrn):
+    conn = sqlite3.connect('vp.db')
     cursor = conn.cursor()
 
-    # Fetch data from different tables
-    cursor.execute("SELECT * FROM patients WHERE id = ?", (patient_id,))
+    # Fetch the patient's general information using MRN
+    cursor.execute("SELECT * FROM patients WHERE mrn = ?", (mrn,))
     patient = cursor.fetchone()
 
-    cursor.execute("SELECT * FROM surveys WHERE patient_id = ?", (patient_id,))
-    surveys = cursor.fetchall()
+    if patient is None:
+        return None  # Handle the case where the patient doesn't exist
 
+    patient_id = patient[0]  # Get patient_id to fetch data from other tables
+    patient_data = {
+        'id': patient[0],
+        'mrn': patient[2],
+        'name': patient[1]  # Assuming you want the name as well
+    }
+
+    # Surveys
+    cursor.execute("SELECT * FROM surveys WHERE patient_id = ?", (patient_id,))
+    surveys = cursor.fetchone()
+    if surveys:
+        patient_data.update({
+            'date_completed_priorities': surveys[2],
+            'nutrition_priority': surveys[3],
+            'exercise_priority': surveys[4],
+            'sleep_priority': surveys[5],
+            'stress_priority': surveys[6],
+            'relationships_priority': surveys[7],
+            'date_completed_readiness': surveys[8],
+            'importance_readiness': surveys[9],
+            'confidence_readiness': surveys[10],
+            'date_completed_mental_health': surveys[11],
+            'phq9_score': surveys[12],
+            'gad7_score': surveys[13],
+        })
+    else:
+        # In case surveys data isn't found
+        patient_data.update({
+            'date_completed_mental_health': None,
+            'phq9_score': None,
+            'gad7_score': None,
+        })
+
+    # Biometric Data
     cursor.execute(
         "SELECT * FROM biometric_data WHERE patient_id = ?", (patient_id,))
     biometrics = cursor.fetchall()
+    patient_data['biometrics'] = [{'date_completed': row[2], 'fasting_glucose': row[3], 'total_cholesterol': row[4],
+                                   'triglycerides': row[5], 'hdl_cholesterol': row[6], 'apolipoprotein_b': row[7],
+                                   'hba1c': row[8], 'alt': row[9]} for row in biometrics]
 
+    # Vital Signs
     cursor.execute(
         "SELECT * FROM vital_signs WHERE patient_id = ?", (patient_id,))
     vitals = cursor.fetchall()
+    patient_data['vitals'] = [{'date_completed': row[2], 'blood_pressure': row[3],
+                               'weight': row[4], 'bmi': row[5], 'vitality_score': row[6]} for row in vitals]
 
+    # Encounters
     cursor.execute(
         "SELECT * FROM encounters WHERE patient_id = ?", (patient_id,))
     encounters = cursor.fetchall()
+    patient_data['encounters'] = [(row[2], row[3], row[4])
+                                  for row in encounters]
 
+    # SMS Messages
     cursor.execute(
         "SELECT * FROM sms_messages WHERE patient_id = ?", (patient_id,))
     sms_messages = cursor.fetchall()
+    patient_data['sms_messages'] = [(row[2], row[3]) for row in sms_messages]
 
-    cursor.execute(
-        "SELECT * FROM appointments WHERE patient_id = ?", (patient_id,))
-    appointments = cursor.fetchall()
-
+    # Goals
     cursor.execute("SELECT * FROM goals WHERE patient_id = ?", (patient_id,))
-    goals = cursor.fetchall()
+    goals = cursor.fetchone()
+    if goals:
+        patient_data.update({
+            'date_completed_goals': goals[2],
+            'weight_loss_goal': goals[3],
+            'vitality_score_goal': goals[4]
+        })
 
     conn.close()
-
-    # Aggregate the data as needed
-    patient_data = {
-        'name': patient[1],
-        'surveys': surveys,
-        'biometrics': biometrics,
-        'vitals': vitals,
-        'encounters': encounters,
-        'sms_messages': sms_messages,
-        'appointments': appointments,
-        'goals': goals
-    }
 
     return patient_data

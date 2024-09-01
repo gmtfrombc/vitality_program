@@ -11,73 +11,78 @@
 <body>
     <h1>Patient Data Entry Form</h1>
     <form action="{{ url_for('entry') }}" method="post">
+        <!-- MRN -->
+        <label for="mrn">Medical Record Number (MRN):</label>
+        <input type="text" id="mrn" name="mrn" required><br>
+
         <!-- Patient Name -->
         <label for="name">Patient Name:</label>
         <input type="text" id="name" name="name" required><br>
 
         <!-- Surveys -->
         <h2>Surveys</h2>
+
         <h3>Priorities Survey</h3>
         <label for="date_completed_priorities">Date Completed:</label>
-        <input type="date" id="date_completed_priorities" name="date_completed_priorities" required><br>
+        <input type="date" id="date_completed_priorities" name="date_completed_priorities"><br>
         <label for="nutrition_priority">Nutrition Priority:</label>
-        <input type="number" id="nutrition_priority" name="nutrition_priority" min="1" max="5" required><br>
+        <input type="number" id="nutrition_priority" name="nutrition_priority" min="1" max="5"><br>
         <label for="exercise_priority">Exercise Priority:</label>
-        <input type="number" id="exercise_priority" name="exercise_priority" min="1" max="5" required><br>
+        <input type="number" id="exercise_priority" name="exercise_priority" min="1" max="5"><br>
         <label for="sleep_priority">Sleep Priority:</label>
-        <input type="number" id="sleep_priority" name="sleep_priority" min="1" max="5" required><br>
+        <input type="number" id="sleep_priority" name="sleep_priority" min="1" max="5"><br>
         <label for="stress_priority">Stress Priority:</label>
-        <input type="number" id="stress_priority" name="stress_priority" min="1" max="5" required><br>
+        <input type="number" id="stress_priority" name="stress_priority" min="1" max="5"><br>
         <label for="relationships_priority">Relationships Priority:</label>
-        <input type="number" id="relationships_priority" name="relationships_priority" min="1" max="5" required><br>
+        <input type="number" id="relationships_priority" name="relationships_priority" min="1" max="5"><br>
 
         <h3>Readiness Survey</h3>
         <label for="date_completed_readiness">Date Completed:</label>
-        <input type="date" id="date_completed_readiness" name="date_completed_readiness" required><br>
+        <input type="date" id="date_completed_readiness" name="date_completed_readiness"><br>
         <label for="importance_readiness">Importance of Health Change:</label>
-        <input type="number" id="importance_readiness" name="importance_readiness" min="1" max="5" required><br>
+        <input type="number" id="importance_readiness" name="importance_readiness" min="1" max="5"><br>
         <label for="confidence_readiness">Confidence in Making Change:</label>
-        <input type="number" id="confidence_readiness" name="confidence_readiness" min="1" max="5" required><br>
+        <input type="number" id="confidence_readiness" name="confidence_readiness" min="1" max="5"><br>
 
         <h3>Mental Health Survey</h3>
         <label for="date_completed_mental_health">Date Completed:</label>
-        <input type="date" id="date_completed_mental_health" name="date_completed_mental_health" required><br>
+        <input type="date" id="date_completed_mental_health" name="date_completed_mental_health"><br>
         <label for="phq9_score">PHQ-9 Score:</label>
-        <input type="number" id="phq9_score" name="phq9_score" min="0" max="27" required><br>
+        <input type="number" id="phq9_score" name="phq9_score" min="0" max="27"><br>
         <label for="gad7_score">GAD-7 Score:</label>
-        <input type="number" id="gad7_score" name="gad7_score" min="0" max="21" required><br>
+        <input type="number" id="gad7_score" name="gad7_score" min="0" max="21"><br>
 
         <!-- Biometric Data -->
         <h2>Biometric Data</h2>
         <label for="date_completed_biometrics">Date Completed:</label>
-        <input type="date" id="date_completed_biometrics" name="date_completed_biometrics" required><br>
+        <input type="date" id="date_completed_biometrics" name="date_completed_biometrics"><br>
         <label for="fasting_glucose">Fasting Glucose:</label>
-        <input type="number" id="fasting_glucose" name="fasting_glucose" required><br>
+        <input type="number" id="fasting_glucose" name="fasting_glucose" step="0.1"><br>
         <label for="total_cholesterol">Total Cholesterol:</label>
-        <input type="number" id="total_cholesterol" name="total_cholesterol" required><br>
+        <input type="number" id="total_cholesterol" name="total_cholesterol" step="0.1"><br>
         <label for="triglycerides">Triglycerides:</label>
-        <input type="number" id="triglycerides" name="triglycerides" required><br>
+        <input type="number" id="triglycerides" name="triglycerides" step="0.1"><br>
         <label for="hdl_cholesterol">HDL Cholesterol:</label>
-        <input type="number" id="hdl_cholesterol" name="hdl_cholesterol" required><br>
+        <input type="number" id="hdl_cholesterol" name="hdl_cholesterol" step="0.1"><br>
         <label for="apolipoprotein_b">Apolipoprotein B:</label>
-        <input type="number" id="apolipoprotein_b" name="apolipoprotein_b" required><br>
+        <input type="number" id="apolipoprotein_b" name="apolipoprotein_b" step="0.1"><br>
         <label for="hba1c">Hemoglobin A1C:</label>
-        <input type="number" id="hba1c" name="hba1c" step="0.1" required><br>
+        <input type="number" id="hba1c" name="hba1c" step="0.1"><br>
         <label for="alt">Liver Enzyme ALT:</label>
-        <input type="number" id="alt" name="alt" required><br>
+        <input type="number" id="alt" name="alt" step="0.1"><br>
 
         <!-- Vital Signs -->
         <h2>Vital Signs</h2>
         <label for="date_completed_vitals">Date Completed:</label>
-        <input type="date" id="date_completed_vitals" name="date_completed_vitals" required><br>
+        <input type="date" id="date_completed_vitals" name="date_completed_vitals"><br>
         <label for="blood_pressure">Blood Pressure (systolic/diastolic):</label>
-        <input type="text" id="blood_pressure" name="blood_pressure" required><br>
+        <input type="text" id="blood_pressure" name="blood_pressure"><br>
         <label for="weight">Weight (lbs):</label>
-        <input type="number" id="weight" name="weight" required><br>
+        <input type="number" id="weight" name="weight" step="0.1"><br>
         <label for="bmi">BMI:</label>
-        <input type="number" id="bmi" name="bmi" required><br>
+        <input type="number" id="bmi" name="bmi" step="0.1"><br>
         <label for="vitality_score">Vitality Score:</label>
-        <input type="number" id="vitality_score" name="vitality_score" required><br>
+        <input type="number" id="vitality_score" name="vitality_score" step="0.1"><br>
 
         <!-- Encounters -->
         <h2>Encounters</h2>
@@ -111,27 +116,27 @@
         <!-- Appointments -->
         <h2>Appointments</h2>
         <label for="provider_scheduled">Provider Appointments Scheduled:</label>
-        <input type="number" id="provider_scheduled" name="provider_scheduled" required><br>
+        <input type="number" id="provider_scheduled" name="provider_scheduled" step="1"><br>
         <label for="provider_completed">Provider Appointments Completed:</label>
-        <input type="number" id="provider_completed" name="provider_completed" required><br>
+        <input type="number" id="provider_completed" name="provider_completed" step="1"><br>
         <label for="provider_missed">Provider Appointments Missed:</label>
-        <input type="number" id="provider_missed" name="provider_missed" required><br>
+        <input type="number" id="provider_missed" name="provider_missed" step="1"><br>
 
         <label for="coach_scheduled">Coach Appointments Scheduled:</label>
-        <input type="number" id="coach_scheduled" name="coach_scheduled" required><br>
+        <input type="number" id="coach_scheduled" name="coach_scheduled" step="1"><br>
         <label for="coach_completed">Coach Appointments Completed:</label>
-        <input type="number" id="coach_completed" name="coach_completed" required><br>
+        <input type="number" id="coach_completed" name="coach_completed" step="1"><br>
         <label for="coach_missed">Coach Appointments Missed:</label>
-        <input type="number" id="coach_missed" name="coach_missed" required><br>
+        <input type="number" id="coach_missed" name="coach_missed" step="1"><br>
 
         <!-- Goals and Progress -->
         <h2>Goals and Progress</h2>
         <label for="date_completed_goals">Date Completed:</label>
-        <input type="date" id="date_completed_goals" name="date_completed_goals" required><br>
+        <input type="date" id="date_completed_goals" name="date_completed_goals"><br>
         <label for="weight_loss_goal">Weight Loss Goal:</label>
-        <input type="number" id="weight_loss_goal" name="weight_loss_goal" required><br>
+        <input type="number" id="weight_loss_goal" name="weight_loss_goal" step="0.1"><br>
         <label for="vitality_score_goal">Vitality Score Goal:</label>
-        <input type="number" id="vitality_score_goal" name="vitality_score_goal" required><br>
+        <input type="number" id="vitality_score_goal" name="vitality_score_goal" step="0.1"><br>
 
         <br>
         <input type="submit" value="Submit">

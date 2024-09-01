@@ -10,8 +10,29 @@
 
 <body>
     <h1>Welcome to the Vitality Program</h1>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-messages">
+        {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
     <a href="{{ url_for('entry') }}">Enter Patient Data</a>
-    <a href="{{ url_for('summary', patient_id=2) }}">View Summary for Patient 1</a>
+
+    <h2>Patients</h2>
+    <ul>
+        {% for patient in patients %}
+        <li>
+            {{ patient[0] }} (MRN: {{ patient[1] }})
+            <a href="{{ url_for('summary', mrn=patient[1]) }}">View Summary</a>
+        </li>
+        {% endfor %}
+    </ul>
 </body>
 
 </html>
