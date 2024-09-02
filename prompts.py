@@ -1,27 +1,31 @@
 def generate_prompt(patient_data):
-    # Surveys Section
-    priorities_survey = f"""
-    Date: {patient_data.get('date_completed_priorities', 'N/A')}
-    Scores: Diet: {patient_data.get('nutrition_priority', 'N/A')}/5, Exercise: {patient_data.get('exercise_priority', 'N/A')}/5,
-    Sleep: {patient_data.get('sleep_priority', 'N/A')}/5, Stress: {patient_data.get('stress_priority', 'N/A')}/5,
-    Relationships: {patient_data.get('relationships_priority', 'N/A')}/5
-    """
+    # Priorities Survey Section
+    priorities_survey = "\n".join([
+        f"Date: {survey['date_completed']}\n"
+        f"Scores: Diet: {survey['nutrition_priority']
+                         }/5, Exercise: {survey['exercise_priority']}/5, "
+        f"Sleep: {survey['sleep_priority']
+                  }/5, Stress: {survey['stress_priority']}/5, "
+        f"Relationships: {survey['relationships_priority']}/5"
+        for survey in patient_data.get('priorities', [])
+    ]) or "No Priorities Survey data available."
 
-    readiness_survey = f"""
-    Date: {patient_data.get('date_completed_readiness', 'N/A')}
-    Scores: Importance of Health Change: {patient_data.get('importance_readiness', 'N/A')}/5,
-    Confidence in Making Change: {patient_data.get('confidence_readiness', 'N/A')}/5
-    """
+    # Readiness Survey Section
+    readiness_survey = "\n".join([
+        f"Date: {survey['date_completed']}\n"
+        f"Scores: Importance of Health Change: {
+            survey['importance_readiness']}/5, "
+        f"Confidence in Making Change: {survey['confidence_readiness']}/5"
+        for survey in patient_data.get('readiness', [])
+    ]) or "No Readiness Survey data available."
 
-    # Simplified logic to ensure data is displayed if available
-    mental_health_survey = f"""
-    Date: {patient_data.get('date_completed_mental_health', 'N/A')}
-    PHQ-9 Score: {patient_data.get('phq9_score', 'N/A')}/27,
-    GAD-7 Score: {patient_data.get('gad7_score', 'N/A')}/21
-    """
-
-    if not patient_data.get('date_completed_mental_health') and not patient_data.get('phq9_score') and not patient_data.get('gad7_score'):
-        mental_health_survey = "No Mental Health data available."
+    # Mental Health Survey Section
+    mental_health_survey = "\n".join([
+        f"Date: {survey['date_completed']}\n"
+        f"PHQ-9 Score: {survey['phq9_score']
+                        }/27, GAD-7 Score: {survey['gad7_score']}/21"
+        for survey in patient_data.get('mental_health', [])
+    ]) or "No Mental Health data available."
 
     # Biometric Data Section
     biometric_data = "\n".join([
@@ -44,18 +48,28 @@ def generate_prompt(patient_data):
 
     # Engagement Metrics Section
     encounters_summary = "\n".join([
-        f"{date} {type}: {document}" for date, type, document in patient_data.get('encounters', [])
+        f"{date} {type_}: {document}"
+        for date, type_, document in patient_data.get('encounters', [])
     ]) or "No encounter summaries available."
 
     sms_messages = "\n".join([
-        f"{date}: {content}" for date, content in patient_data.get('sms_messages', [])
+        f"{date}: {content}"
+        for date, content in patient_data.get('sms_messages', [])
     ]) or "No SMS messages available."
 
+    # Appointments Section
+    appointments = patient_data.get(
+        'appointments', {'provider': {}, 'coach': {}})
+    provider_appointments = appointments.get(
+        'provider', {'scheduled': 0, 'completed': 0, 'missed': 0})
+    coach_appointments = appointments.get(
+        'coach', {'scheduled': 0, 'completed': 0, 'missed': 0})
+
     appointment_summary = f"""
-    Provider Appointments: {patient_data.get('provider_scheduled', 0)} scheduled, {patient_data.get('provider_completed', 0)} completed,
-    {patient_data.get('provider_missed', 0)} missed.
-    Coach Appointments: {patient_data.get('coach_scheduled', 0)} scheduled, {patient_data.get('coach_completed', 0)} completed,
-    {patient_data.get('coach_missed', 0)} missed.
+    Provider Appointments: {provider_appointments['scheduled']} scheduled, {provider_appointments['completed']} completed,
+    {provider_appointments['missed']} missed.
+    Coach Appointments: {coach_appointments['scheduled']} scheduled, {coach_appointments['completed']} completed,
+    {coach_appointments['missed']} missed.
     """
 
     # Goals and Progress Section
@@ -79,9 +93,11 @@ def generate_prompt(patient_data):
 
     **Patient Data for Analysis:**
     1. **Surveys:**
+    Priorities Survey
     {priorities_survey}
+    Readiness Survey
     {readiness_survey}
-    Mental Health:
+    Mental Health Surveys:
     {mental_health_survey}
 
     2. **Biometric Data:**
@@ -95,6 +111,7 @@ def generate_prompt(patient_data):
     {encounters_summary}
     SMS Messages:
     {sms_messages}
+    Appointment Summary
     {appointment_summary}
 
     5. **Goals and Progress:**

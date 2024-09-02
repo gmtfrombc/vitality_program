@@ -104,6 +104,9 @@ def init_db():
 
 
 def add_patient_data(patient_data):
+    print("add_patient_data function called")
+    print(f"Received patient_data: {patient_data}")
+
     conn = sqlite3.connect('vp.db')
     cursor = conn.cursor()
 
@@ -116,102 +119,70 @@ def add_patient_data(patient_data):
                    (patient_data['mrn'],))
     patient_id = cursor.fetchone()[0]
 
-    # Insert surveys data if any field is filled
-    if any([patient_data.get('date_completed_priorities'), patient_data.get('nutrition_priority'),
-            patient_data.get('exercise_priority'), patient_data.get(
-                'sleep_priority'),
-            patient_data.get('stress_priority'), patient_data.get(
-                'relationships_priority'),
-            patient_data.get('date_completed_readiness'), patient_data.get(
-                'importance_readiness'),
-            patient_data.get('confidence_readiness'), patient_data.get(
-                'date_completed_mental_health'),
-            patient_data.get('phq9_score'), patient_data.get('gad7_score')]):
-        cursor.execute('''INSERT INTO surveys (
-            patient_id, date_completed_priorities, nutrition_priority, exercise_priority, 
-            sleep_priority, stress_priority, relationships_priority, date_completed_readiness, 
-            importance_readiness, confidence_readiness, date_completed_mental_health, phq9_score, gad7_score) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', (
-            patient_id, patient_data.get('date_completed_priorities'),
-            patient_data.get('nutrition_priority'), patient_data.get(
-                'exercise_priority'),
-            patient_data.get('sleep_priority'), patient_data.get(
-                'stress_priority'),
-            patient_data.get('relationships_priority'), patient_data.get(
-                'date_completed_readiness'),
-            patient_data.get('importance_readiness'), patient_data.get(
-                'confidence_readiness'),
-            patient_data.get('date_completed_mental_health'), patient_data.get(
-                'phq9_score'),
-            patient_data.get('gad7_score')
-        ))
+    # Debug: Check patient_id and data
+    print(f"Patient ID: {patient_id}")
 
-     # Insert biometric data only if all relevant fields have been provided
-    if patient_data.get('date_completed_biometrics') and any([
-        patient_data.get('fasting_glucose'),
-        patient_data.get('total_cholesterol'),
-        patient_data.get('triglycerides'),
-        patient_data.get('hdl_cholesterol'),
-        patient_data.get('apolipoprotein_b'),
-        patient_data.get('hba1c'),
-        patient_data.get('alt')
-    ]):
-        cursor.execute('''INSERT INTO biometric_data (
-            patient_id, date_completed, fasting_glucose, total_cholesterol, triglycerides, 
-            hdl_cholesterol, apolipoprotein_b, hba1c, alt) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''', (
-            patient_id, patient_data.get('date_completed_biometrics'),
-            patient_data.get('fasting_glucose'), patient_data.get(
-                'total_cholesterol'),
-            patient_data.get('triglycerides'), patient_data.get(
-                'hdl_cholesterol'),
-            patient_data.get('apolipoprotein_b'), patient_data.get('hba1c'),
-            patient_data.get('alt')
-        ))
+    # Handle Provider Appointments
+    if 'provider_scheduled' in patient_data and 'provider_completed' in patient_data and 'provider_missed' in patient_data:
+        cursor.execute(
+            '''SELECT id FROM appointments WHERE patient_id = ? AND appointment_type = 'Provider' ''', (patient_id,))
+        provider_record = cursor.fetchone()
+        print(f"Provider appointment record exists: {provider_record}")
+        if provider_record:  # If record exists, update it
+            cursor.execute('''UPDATE appointments 
+                              SET scheduled = ?, completed = ?, missed = ? 
+                              WHERE patient_id = ? AND appointment_type = 'Provider' ''', (
+                patient_data['provider_scheduled'],
+                patient_data['provider_completed'],
+                patient_data['provider_missed'],
+                patient_id
+            ))
+            print(f"Updated Provider appointment for patient_id: {patient_id}")
+        else:  # Insert a new record
+            cursor.execute('''INSERT INTO appointments (
+                patient_id, appointment_type, scheduled, completed, missed) 
+                VALUES (?, 'Provider', ?, ?, ?)''', (
+                patient_id,
+                patient_data['provider_scheduled'],
+                patient_data['provider_completed'],
+                patient_data['provider_missed']
+            ))
+            print(f"Inserted new Provider appointment for patient_id: {
+                  patient_id}")
 
-    # Insert vital signs data if any field is filled
-    if any([patient_data.get('blood_pressure'), patient_data.get('weight'),
-            patient_data.get('bmi'), patient_data.get('vitality_score')]):
-        cursor.execute('''INSERT INTO vital_signs (
-            patient_id, date_completed, blood_pressure, weight, bmi, vitality_score) 
-            VALUES (?, ?, ?, ?, ?, ?)''', (
-            patient_id, patient_data.get('date_completed_vitals'),
-            patient_data.get('blood_pressure'), patient_data.get('weight'),
-            patient_data.get('bmi'), patient_data.get('vitality_score')
-        ))
+    # Handle Coach Appointments
+    if 'coach_scheduled' in patient_data and 'coach_completed' in patient_data and 'coach_missed' in patient_data:
+        cursor.execute(
+            '''SELECT id FROM appointments WHERE patient_id = ? AND appointment_type = 'Coach' ''', (patient_id,))
+        coach_record = cursor.fetchone()
+        print(f"Coach appointment record exists: {coach_record}")
+        if coach_record:  # If record exists, update it
+            cursor.execute('''UPDATE appointments 
+                              SET scheduled = ?, completed = ?, missed = ? 
+                              WHERE patient_id = ? AND appointment_type = 'Coach' ''', (
+                patient_data['coach_scheduled'],
+                patient_data['coach_completed'],
+                patient_data['coach_missed'],
+                patient_id
+            ))
+            print(f"Updated Coach appointment for patient_id: {patient_id}")
+        else:  # Insert a new record
+            cursor.execute('''INSERT INTO appointments (
+                patient_id, appointment_type, scheduled, completed, missed) 
+                VALUES (?, 'Coach', ?, ?, ?)''', (
+                patient_id,
+                patient_data['coach_scheduled'],
+                patient_data['coach_completed'],
+                patient_data['coach_missed']
+            ))
+            print(f"Inserted new Coach appointment for patient_id: {
+                  patient_id}")
 
-    # Insert encounters data if all fields for at least one encounter are filled
-    if 'encounter_dates' in patient_data and 'encounter_types' in patient_data and 'encounter_documents' in patient_data:
-        for date, type_, document in zip(patient_data['encounter_dates'], patient_data['encounter_types'], patient_data['encounter_documents']):
-            if date and type_ and document:  # Ensure all fields are non-empty
-                cursor.execute('''INSERT INTO encounters (
-                    patient_id, date_completed, encounter_type, encounter_document) 
-                    VALUES (?, ?, ?, ?)''', (
-                    patient_id, date, type_, document
-                ))
-
-    # Insert SMS messages data if both date and content are filled
-    if 'sms_dates' in patient_data and 'sms_contents' in patient_data:
-        for date, content in zip(patient_data['sms_dates'], patient_data['sms_contents']):
-            if date and content:  # Ensure fields are non-empty
-                cursor.execute('''INSERT INTO sms_messages (
-                    patient_id, date_completed, sms_content) 
-                    VALUES (?, ?, ?)''', (
-                    patient_id, date, content
-                ))
-
-    # Insert goals and progress data if any field is filled
-    if any([patient_data.get('weight_loss_goal'), patient_data.get('vitality_score_goal')]):
-        cursor.execute('''INSERT INTO goals (
-            patient_id, date_completed, weight_loss_goal, vitality_score_goal) 
-            VALUES (?, ?, ?, ?)''', (
-            patient_id, patient_data.get('date_completed_goals'),
-            patient_data.get('weight_loss_goal'),
-            patient_data.get('vitality_score_goal')
-        ))
-
+    # Commit the transaction and close the connection
+    print("Committing transaction")
     conn.commit()
     conn.close()
+    print("Connection closed")
 
 
 def get_patient_data_by_mrn(mrn):
@@ -229,34 +200,40 @@ def get_patient_data_by_mrn(mrn):
     patient_data = {
         'id': patient[0],
         'mrn': patient[2],
-        'name': patient[1]  # Assuming you want the name as well
+        'name': patient[1]
     }
 
-    # Surveys
+    # Fetch all surveys for the patient
     cursor.execute("SELECT * FROM surveys WHERE patient_id = ?", (patient_id,))
-    surveys = cursor.fetchone()
-    if surveys:
-        patient_data.update({
-            'date_completed_priorities': surveys[2],
-            'nutrition_priority': surveys[3],
-            'exercise_priority': surveys[4],
-            'sleep_priority': surveys[5],
-            'stress_priority': surveys[6],
-            'relationships_priority': surveys[7],
-            'date_completed_readiness': surveys[8],
-            'importance_readiness': surveys[9],
-            'confidence_readiness': surveys[10],
-            'date_completed_mental_health': surveys[11],
-            'phq9_score': surveys[12],
-            'gad7_score': surveys[13],
-        })
-    else:
-        # In case surveys data isn't found
-        patient_data.update({
-            'date_completed_mental_health': None,
-            'phq9_score': None,
-            'gad7_score': None,
-        })
+    surveys = cursor.fetchall()
+
+    # Separate surveys data into respective categories
+    patient_data['priorities'] = []
+    patient_data['readiness'] = []
+    patient_data['mental_health'] = []
+
+    for survey in surveys:
+        if survey[2]:  # date_completed_priorities exists
+            patient_data['priorities'].append({
+                'date_completed': survey[2],
+                'nutrition_priority': survey[3],
+                'exercise_priority': survey[4],
+                'sleep_priority': survey[5],
+                'stress_priority': survey[6],
+                'relationships_priority': survey[7]
+            })
+        if survey[8]:  # date_completed_readiness exists
+            patient_data['readiness'].append({
+                'date_completed': survey[8],
+                'importance_readiness': survey[9],
+                'confidence_readiness': survey[10]
+            })
+        if survey[11]:  # date_completed_mental_health exists
+            patient_data['mental_health'].append({
+                'date_completed': survey[11],
+                'phq9_score': survey[12],
+                'gad7_score': survey[13]
+            })
 
     # Biometric Data
     cursor.execute(
@@ -295,6 +272,29 @@ def get_patient_data_by_mrn(mrn):
             'weight_loss_goal': goals[3],
             'vitality_score_goal': goals[4]
         })
+
+    # Appointments
+    cursor.execute(
+        "SELECT * FROM appointments WHERE patient_id = ?", (patient_id,))
+    appointments = cursor.fetchall()
+    patient_data['appointments'] = {
+        'provider': {'scheduled': 0, 'completed': 0, 'missed': 0},
+        'coach': {'scheduled': 0, 'completed': 0, 'missed': 0}
+    }
+
+    for appointment in appointments:
+        if appointment[3] == 'Provider':  # Assuming 'appointment_type' is in the 4th column
+            patient_data['appointments']['provider'] = {
+                'scheduled': appointment[4],
+                'completed': appointment[5],
+                'missed': appointment[6]
+            }
+        elif appointment[3] == 'Coach':  # Adjusting this to match your data
+            patient_data['appointments']['coach'] = {
+                'scheduled': appointment[4],
+                'completed': appointment[5],
+                'missed': appointment[6]
+            }
 
     conn.close()
 
