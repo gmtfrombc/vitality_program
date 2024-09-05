@@ -122,7 +122,92 @@ def add_patient_data(patient_data):
     # Debug: Check patient_id and data
     print(f"Patient ID: {patient_id}")
 
-    # Handle Provider Appointments
+    # Handle Priorities Survey
+    if patient_data.get('date_completed_priorities'):
+        cursor.execute('''REPLACE INTO surveys (
+            id, patient_id, date_completed_priorities, nutrition_priority, exercise_priority, 
+            sleep_priority, stress_priority, relationships_priority) 
+            VALUES ((SELECT id FROM surveys WHERE patient_id = ? AND date_completed_priorities IS NOT NULL), ?, ?, ?, ?, ?, ?, ?)''', (
+            patient_id, patient_id, patient_data['date_completed_priorities'],
+            patient_data.get('nutrition_priority'),
+            patient_data.get('exercise_priority'),
+            patient_data.get('sleep_priority'),
+            patient_data.get('stress_priority'),
+            patient_data.get('relationships_priority')
+        ))
+        print("Inserted/Updated Priorities Survey")
+
+    # Handle Readiness Survey
+    if patient_data.get('date_completed_readiness'):
+        cursor.execute('''REPLACE INTO surveys (
+            id, patient_id, date_completed_readiness, importance_readiness, confidence_readiness) 
+            VALUES ((SELECT id FROM surveys WHERE patient_id = ? AND date_completed_readiness IS NOT NULL), ?, ?, ?, ?)''', (
+            patient_id, patient_id, patient_data['date_completed_readiness'],
+            patient_data.get('importance_readiness'),
+            patient_data.get('confidence_readiness')
+        ))
+        print("Inserted/Updated Readiness Survey")
+
+    # Insert Mental Health Survey data as a new row
+    if patient_data.get('date_completed_mental_health'):
+        cursor.execute('''INSERT INTO surveys (
+            patient_id, date_completed_mental_health, phq9_score, gad7_score) 
+            VALUES (?, ?, ?, ?)''', (
+            patient_id, patient_data['date_completed_mental_health'],
+            patient_data.get('phq9_score'),
+            patient_data.get('gad7_score')
+        ))
+        print("Inserted Mental Health Survey")
+
+    # Insert Biometric Data
+    if patient_data.get('date_completed_biometrics'):
+        cursor.execute('''INSERT INTO biometric_data (
+            patient_id, date_completed, fasting_glucose, total_cholesterol, triglycerides, 
+            hdl_cholesterol, apolipoprotein_b, hba1c, alt) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''', (
+            patient_id, patient_data.get('date_completed_biometrics'),
+            patient_data.get('fasting_glucose'), patient_data.get(
+                'total_cholesterol'),
+            patient_data.get('triglycerides'), patient_data.get(
+                'hdl_cholesterol'),
+            patient_data.get('apolipoprotein_b'), patient_data.get(
+                'hba1c'), patient_data.get('alt')
+        ))
+        print("Inserted Biometric Data")
+
+    # Insert Vital Signs
+    if any([patient_data.get('blood_pressure'), patient_data.get('weight'),
+            patient_data.get('bmi'), patient_data.get('vitality_score')]):
+        cursor.execute('''INSERT INTO vital_signs (
+            patient_id, date_completed, blood_pressure, weight, bmi, vitality_score) 
+            VALUES (?, ?, ?, ?, ?, ?)''', (
+            patient_id, patient_data.get('date_completed_vitals'),
+            patient_data.get('blood_pressure'), patient_data.get('weight'),
+            patient_data.get('bmi'), patient_data.get('vitality_score')
+        ))
+        print("Inserted Vital Signs")
+
+    # Handle Encounters
+    if 'encounter_dates' in patient_data and 'encounter_types' in patient_data and 'encounter_documents' in patient_data:
+        for date, type_, document in zip(patient_data['encounter_dates'], patient_data['encounter_types'], patient_data['encounter_documents']):
+            if date and type_ and document:  # Ensure all fields are non-empty
+                cursor.execute('''INSERT INTO encounters (
+                    patient_id, date_completed, encounter_type, encounter_document) 
+                    VALUES (?, ?, ?, ?)''', (
+                    patient_id, date, type_, document
+                ))
+
+    # Handle SMS Messages
+    if 'sms_dates' in patient_data and 'sms_contents' in patient_data:
+        for date, content in zip(patient_data['sms_dates'], patient_data['sms_contents']):
+            if date and content:  # Ensure fields are non-empty
+                cursor.execute('''INSERT INTO sms_messages (
+                    patient_id, date_completed, sms_content) 
+                    VALUES (?, ?, ?)''', (
+                    patient_id, date, content
+                ))
+
+            # Handle Provider Appointments
     if 'provider_scheduled' in patient_data and 'provider_completed' in patient_data and 'provider_missed' in patient_data:
         cursor.execute(
             '''SELECT id FROM appointments WHERE patient_id = ? AND appointment_type = 'Provider' ''', (patient_id,))
@@ -178,11 +263,18 @@ def add_patient_data(patient_data):
             print(f"Inserted new Coach appointment for patient_id: {
                   patient_id}")
 
+            # Handle Goals (Weight Loss Goal and Vitality Score Goal)
+    if 'weight_loss_goal' in patient_data or 'vitality_score_goal' in patient_data:
+        cursor.execute('''REPLACE INTO goals (
+            id, patient_id, date_completed, weight_loss_goal, vitality_score_goal) 
+            VALUES ((SELECT id FROM goals WHERE patient_id = ?), ?, (SELECT date_completed FROM goals WHERE patient_id = ?), ?, ?)''', (
+            patient_id, patient_id, patient_id,
+            patient_data.get('weight_loss_goal', 'N/A'),
+            patient_data.get('vitality_score_goal', 'N/A')
+        ))
+
     # Commit the transaction and close the connection
     print("Committing transaction")
-    conn.commit()
-    conn.close()
-    print("Connection closed")
 
 
 def get_patient_data_by_mrn(mrn):
